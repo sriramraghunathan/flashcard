@@ -1,115 +1,76 @@
 import React, { useState } from "react";
-import Flashcard from "./components/Flashcard";
-
+import FlashcardSet from "./components/FlashcardSet";
+import FlashcardList from "./components/FlashcardList";
 const App = () => {
-  const [flashcards, setFlashcards] = useState([]);
-  const [form, setForm] = useState({
-    question: "",
-    answer: "",
-    color: "white",
-    fontSize: "text-base",
-    width: "w-72",
-    label: "",
-  });
+  const [sets, setSets] = useState([]);
+  const [activeSet, setActiveSet] = useState(null);
+  const [newSetName, setNewSetName] = useState("");
 
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
-
-  const addFlashcard = () => {
-    if (form.question && form.answer) {
-      setFlashcards([...flashcards, form]);
-      setForm({
-        question: "",
-        answer: "",
-        color: "white",
-        fontSize: "text-base",
-        width: "w-72",
-        label: "",
-      });
+  const createSet = () => {
+    if (newSetName.trim()) {
+      setSets([...sets, { name: newSetName, flashcards: [] }]);
+      setNewSetName("");
     }
   };
 
-  return (
-    <div className="min-h-screen bg-gray-100 p-6">
-      <div className="max-w-2xl mx-auto mb-6 p-6 bg-white rounded-lg shadow">
-        <h2 className="text-xl font-bold mb-4">Create a Flashcard</h2>
-        <div className="grid gap-3">
-          <input
-            type="text"
-            name="question"
-            value={form.question}
-            onChange={handleChange}
-            placeholder="Enter question"
-            className="p-2 border rounded"
-          />
-          <input
-            type="text"
-            name="answer"
-            value={form.answer}
-            onChange={handleChange}
-            placeholder="Enter answer"
-            className="p-2 border rounded"
-          />
-          <input
-            type="text"
-            name="label"
-            value={form.label}
-            onChange={handleChange}
-            placeholder="Enter label (e.g. JavaScript)"
-            className="p-2 border rounded"
-          />
-          <div className="flex gap-3">
-            <select
-              name="color"
-              value={form.color}
-              onChange={handleChange}
-              className="p-2 border rounded"
-            >
-              <option value="white">White</option>
-              <option value="blue-100">Blue</option>
-              <option value="green-100">Green</option>
-              <option value="yellow-100">Yellow</option>
-              <option value="pink-100">Pink</option>
-            </select>
-            <select
-              name="fontSize"
-              value={form.fontSize}
-              onChange={handleChange}
-              className="p-2 border rounded"
-            >
-              <option value="text-sm">Small</option>
-              <option value="text-base">Base</option>
-              <option value="text-lg">Large</option>
-              <option value="text-xl">Extra Large</option>
-            </select>
-            <select
-              name="width"
-              value={form.width}
-              onChange={handleChange}
-              className="p-2 border rounded"
-            >
-              <option value="w-64">Small</option>
-              <option value="w-72">Medium</option>
-              <option value="w-80">Large</option>
-              <option value="w-96">XL</option>
-            </select>
-          </div>
-          <button
-            onClick={addFlashcard}
-            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-          >
-            Add Flashcard
-          </button>
-        </div>
-      </div>
+  const updateSetFlashcards = (setName, newFlashcards) => {
+    setSets((prev) =>
+      prev.map((s) =>
+        s.name === setName ? { ...s, flashcards: newFlashcards } : s
+      )
+    );
+  };
 
-      <div className="flex flex-wrap justify-center">
-        {flashcards.map((card, idx) => (
-          <Flashcard key={idx} {...card} />
-        ))}
+  return (
+    <>
+      <div>
+        {/* other components */}
+        <FlashcardList />
       </div>
-    </div>
+      <div className="min-h-screen bg-gray-100 p-6">
+        {!activeSet ? (
+          <div className="max-w-xl mx-auto">
+            <h1 className="text-2xl font-bold mb-4">Flashcard Folders</h1>
+            <div className="flex gap-2 mb-4">
+              <input
+                value={newSetName}
+                onChange={(e) => setNewSetName(e.target.value)}
+                placeholder="New Subject"
+                className="flex-1 p-2 border rounded"
+              />
+              <button
+                onClick={createSet}
+                className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+              >
+                Add
+              </button>
+            </div>
+            <ul className="gap-10 grid grid-cols-3">
+              {sets.map((set, idx) => (
+                <li
+                  key={idx}
+                  onClick={() => setActiveSet(set.name)}
+                  className="bg-white p-4 rounded shadow w-40 h-40 cursor-pointer hover:bg-yellow-100"
+                >
+                  {set.name} ({set.flashcards.length} cards)
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : (
+          <FlashcardSet
+            setName={activeSet}
+            flashcards={
+              sets.find((s) => s.name === activeSet)?.flashcards || []
+            }
+            onBack={() => setActiveSet(null)}
+            onUpdate={(newFlashcards) =>
+              updateSetFlashcards(activeSet, newFlashcards)
+            }
+          />
+        )}
+      </div>
+    </>
   );
 };
 
